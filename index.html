@@ -432,13 +432,8 @@
                 // For external domains (GitHub Pages), rely primarily on content script
                 if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
                     // Try content script first for external domains
-                    if (tryContentScriptActivation()) {
-                        return;
-                    }
-                    
-                    // If content script fails, prompt for manual extension ID
-                    handleExtensionNotFound();
-                    return;
+                    tryContentScriptActivation();
+                    return; // Don't show modal immediately, let content script handle it
                 }
 
                 // For local or extension pages, try normal flow
@@ -488,14 +483,20 @@
                 url: window.location.href
             }, '*');
 
-            // Set a timeout to check if activation worked
+            // Set a timeout to check if activation worked or show extension guide
             setTimeout(() => {
                 if (!softLockActive) {
-                    handleActivationFailure();
+                    // Check if extension responded but activation failed
+                    if (window.fredaExtensionDetected) {
+                        handleActivationFailure();
+                    } else {
+                        // Extension not detected, show installation guide
+                        handleExtensionNotFound();
+                    }
                 }
-            }, 2000);
+            }, 3000); // Increased timeout to give more time
 
-            return false;
+            return true; // Return true to indicate we're trying the activation
         }
 
         async function deactivateSoftLock() {
@@ -728,6 +729,7 @@
                 switch (data.type) {
                     case 'FREDA_SOFT_LOCK_ACTIVATED':
                         softLockActive = true;
+                        window.fredaExtensionDetected = true;
                         updateControls();
                         updateStatusIndicator();
                         showNotification('Security mode enabled by extension', 'success');
@@ -743,6 +745,7 @@
                     case 'FREDA_EXTENSION_READY':
                         // Extension is ready and can receive commands
                         console.log('Freda extension detected and ready');
+                        window.fredaExtensionDetected = true;
                         showNotification('Extension connected successfully', 'success');
                         break;
                         
