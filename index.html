@@ -358,9 +358,9 @@
                 return savedId;
             }
 
-            // Try chrome.management API
+            // Try chrome.management API - only works on local files or extension pages
             try {
-                if (typeof chrome !== 'undefined' && chrome.management) {
+                if (typeof chrome !== 'undefined' && chrome.management && window.location.protocol !== 'https:') {
                     const extensions = await new Promise((resolve, reject) => {
                         chrome.management.getAll((result) => {
                             if (chrome.runtime.lastError) {
@@ -381,7 +381,21 @@
                     }
                 }
             } catch (error) {
-                // Continue to fallback methods
+                console.warn('Chrome management API not available (expected on external domains):', error);
+            }
+
+            // For external domains (like GitHub Pages), try common extension IDs
+            const commonExtensionIds = [
+                // Add common extension IDs here - users can find their specific one
+                'abcdefghijklmnopqrstuvwxyz123456', // Example ID format
+                'bcdefghijklmnopqrstuvwxyz1234567'  // Another example
+            ];
+
+            for (const id of commonExtensionIds) {
+                if (await testExtensionId(id)) {
+                    localStorage.setItem('fredaExtensionId', id);
+                    return id;
+                }
             }
 
             return null;
@@ -389,6 +403,12 @@
 
         async function testExtensionId(id) {
             try {
+                // For external domains, we can't directly test extension IDs
+                // so we'll try to communicate and see if it works
+                if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
+                    return false; // Will rely on content script injection
+                }
+
                 const result = await new Promise((resolve, reject) => {
                     const timeout = setTimeout(() => reject(new Error('Timeout')), 1000);
                     chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
@@ -406,9 +426,22 @@
             }
         }
 
-        // Main activation function
+        // Enhanced activation function with better external domain support
         async function activateSoftLock() {
             try {
+                // For external domains (GitHub Pages), rely primarily on content script
+                if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
+                    // Try content script first for external domains
+                    if (tryContentScriptActivation()) {
+                        return;
+                    }
+                    
+                    // If content script fails, prompt for manual extension ID
+                    handleExtensionNotFound();
+                    return;
+                }
+
+                // For local or extension pages, try normal flow
                 let extensionId = await getExtensionId();
                 
                 if (!extensionId) {
@@ -434,18 +467,35 @@
                     }
                 );
             } catch (error) {
+                console.warn('Activation error:', error);
                 tryContentScriptActivation();
             }
         }
 
         function tryContentScriptActivation() {
+            // First try the window object method
             if (window.fredaSoftLockExtension && window.fredaSoftLockExtension.activateSoftLock) {
                 window.fredaSoftLockExtension.activateSoftLock(window.location.href)
                     .then(() => onActivationSuccess())
                     .catch(() => handleActivationFailure());
-            } else {
-                handleActivationFailure();
+                return true;
             }
+
+            // Try postMessage to communicate with content script
+            window.postMessage({
+                type: 'FREDA_ACTIVATE_REQUEST',
+                source: 'trigger-page',
+                url: window.location.href
+            }, '*');
+
+            // Set a timeout to check if activation worked
+            setTimeout(() => {
+                if (!softLockActive) {
+                    handleActivationFailure();
+                }
+            }, 2000);
+
+            return false;
         }
 
         async function deactivateSoftLock() {
@@ -454,6 +504,12 @@
             }
 
             try {
+                // For external domains, try content script first
+                if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
+                    tryContentScriptDeactivation();
+                    return;
+                }
+
                 const extensionId = await getExtensionId() || localStorage.getItem('fredaExtensionId');
                 
                 if (extensionId) {
@@ -477,13 +533,26 @@
         }
 
         function tryContentScriptDeactivation() {
+            // First try the window object method
             if (window.fredaSoftLockExtension && window.fredaSoftLockExtension.deactivateSoftLock) {
                 window.fredaSoftLockExtension.deactivateSoftLock()
                     .then(() => onDeactivationSuccess())
                     .catch(() => handleDeactivationFailure());
-            } else {
-                handleDeactivationFailure();
+                return;
             }
+
+            // Try postMessage to communicate with content script
+            window.postMessage({
+                type: 'FREDA_DEACTIVATE_REQUEST',
+                source: 'trigger-page'
+            }, '*');
+
+            // Set a timeout to check if deactivation worked
+            setTimeout(() => {
+                if (softLockActive) {
+                    handleDeactivationFailure();
+                }
+            }, 2000);
         }
 
         // Success/failure handlers
@@ -510,6 +579,12 @@
         }
 
         function handleExtensionNotFound() {
+            // Check if we're on an external domain
+            if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
+                showExtensionInstallationGuide();
+                return;
+            }
+
             const extensionId = prompt(`Extension auto-detection failed. Please enter your extension ID:
 
 1. Go to chrome://extensions/
@@ -523,6 +598,58 @@
             } else {
                 showNotification('Please install the Freda Soft Lock Plus extension first.', 'error');
             }
+        }
+
+        function showExtensionInstallationGuide() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 15px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                    <h2 style="color: #2c3e50; margin-top: 0;">🔒 Extension Required</h2>
+                    <p>To use security features on this external domain, you need to install the Freda Soft Lock Plus browser extension:</p>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="margin-top: 0; color: #495057;">Installation Steps:</h3>
+                        <ol style="line-height: 1.8;">
+                            <li>Install the <strong>Freda Soft Lock Plus</strong> extension from Chrome Web Store</li>
+                            <li>Make sure the extension is enabled</li>
+                            <li>Refresh this page</li>
+                            <li>The extension should automatically detect this trigger page</li>
+                        </ol>
+                    </div>
+
+                    <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h4 style="margin-top: 0; color: #0c5460;">Troubleshooting:</h4>
+                        <ul style="line-height: 1.6;">
+                            <li>Ensure the extension has permission to run on all sites</li>
+                            <li>Check that the extension is not blocked by your browser</li>
+                            <li>Try disabling other security extensions temporarily</li>
+                        </ul>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 25px;">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                                style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 16px;">
+                            I Understand
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
         }
 
         // UI update functions
@@ -583,21 +710,62 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function() {
-            // Try auto-detection silently
-            await getExtensionId();
+            // Try auto-detection silently (may not work on external domains)
+            try {
+                await getExtensionId();
+            } catch (error) {
+                console.warn('Extension auto-detection failed (expected on external domains):', error);
+            }
             
             // Listen for extension events
             window.addEventListener('message', function(event) {
-                if (event.data.type === 'FREDA_SOFT_LOCK_ACTIVATED') {
-                    softLockActive = true;
-                    updateControls();
-                    updateStatusIndicator();
-                } else if (event.data.type === 'FREDA_SOFT_LOCK_DEACTIVATED') {
-                    softLockActive = false;
-                    updateControls();
-                    updateStatusIndicator();
+                // Security check - ensure message is from expected source
+                if (event.source !== window) return;
+
+                const data = event.data;
+                if (!data || typeof data !== 'object') return;
+
+                switch (data.type) {
+                    case 'FREDA_SOFT_LOCK_ACTIVATED':
+                        softLockActive = true;
+                        updateControls();
+                        updateStatusIndicator();
+                        showNotification('Security mode enabled by extension', 'success');
+                        break;
+                        
+                    case 'FREDA_SOFT_LOCK_DEACTIVATED':
+                        softLockActive = false;
+                        updateControls();
+                        updateStatusIndicator();
+                        showNotification('Security mode disabled by extension', 'info');
+                        break;
+                        
+                    case 'FREDA_EXTENSION_READY':
+                        // Extension is ready and can receive commands
+                        console.log('Freda extension detected and ready');
+                        showNotification('Extension connected successfully', 'success');
+                        break;
+                        
+                    case 'FREDA_ACTIVATION_FAILED':
+                        handleActivationFailure();
+                        break;
+                        
+                    case 'FREDA_DEACTIVATION_FAILED':
+                        handleDeactivationFailure();
+                        break;
                 }
             });
+
+            // Auto-detect extension presence for external domains
+            if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
+                // Send a ping to see if extension content script is present
+                setTimeout(() => {
+                    window.postMessage({
+                        type: 'FREDA_PING_REQUEST',
+                        source: 'trigger-page'
+                    }, '*');
+                }, 1000);
+            }
         });
     </script>
 </body>
