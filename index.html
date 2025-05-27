@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freda Soft Lock Plus - Professional Assessment Security</title>
+    
+    <!-- CKEditor 5 CDN -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .control-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .control-btn:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .content-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .text-area {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .status-inactive {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-active {
+            background: #27ae60;
+            color: white;
+        }
+
+        .instructions {
+            background: #d1ecf1;
+            border-left: 4px solid #bee5eb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .instructions h4 {
+            margin-top: 0;
+            color: #0c5460;
+        }
+
+        .ck-editor__editable {
+            min-height: 200px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator status-inactive" id="statusIndicator">
+        🔓 Assessment Security Inactive
+    </div>
+
+    <div class="header">
+        <h1>🛡️ Freda Soft Lock Plus</h1>
+        <p class="subtitle">Professional Assessment Security Solution</p>
+        <p>Secure testing environment with content protection and activity monitoring for educational assessments.</p>
+    </div>
+
+    <div class="control-section">
+        <h2>Assessment Security Control</h2>
+        <p>Activate security mode to enable content protection, restrict navigation, and monitor assessment activity.</p>
+        
+        <button class="control-btn" id="activateBtn" onclick="activateSoftLock()">
+            🔒 Enable Security Mode
+        </button>
+        
+        <button class="control-btn" id="deactivateBtn" onclick="deactivateSoftLock()" disabled>
+            🔓 Disable Security Mode
+        </button>
+
+        <div class="instructions">
+            <h4>📋 Security Features:</h4>
+            <ul>
+                <li><strong>Content Protection:</strong> Prevents copying, right-click, and text selection</li>
+                <li><strong>Navigation Control:</strong> Blocks unauthorized tabs and browser functions</li>
+                <li><strong>Focus Monitoring:</strong> Tracks window focus and tab switching</li>
+                <li><strong>Activity Logging:</strong> Records all security-related events</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <h2 class="section-title">📝 Assessment Content Area</h2>
+        
+        <div class="form-group">
+            <label class="form-label">Response Area</label>
+            <textarea class="form-control text-area" placeholder="Enter your response here...">This is a sample assessment area. When security mode is active, content protection features will prevent copying and unauthorized access.</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Rich Text Editor</label>
+            <div id="editor">
+                <h3>Assessment Instructions</h3>
+                <p>This is a rich text editor environment similar to those used in professional assessment platforms.</p>
+                <ul>
+                    <li>Complete all sections of this assessment</li>
+                    <li>Ensure all responses are your original work</li>
+                    <li>Contact your instructor if you experience technical difficulties</li>
+                </ul>
+                <p><strong>Note:</strong> When security mode is active, content protection and monitoring features are enabled.</p>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Student Information</label>
+            <input type="text" class="form-control" placeholder="Enter your student ID or name..." value="">
+        </div>
+    </div>
+
+    <div class="content-section">
+        <h2 class="section-title">🔒 Security Information</h2>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>Content Protection</h3>
+                <ul class="feature-list">
+                    <li>Right-click menu disabled</li>
+                    <li>Text selection blocked</li>
+                    <li>Copy/paste operations restricted</li>
+                    <li>Drag and drop disabled</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>Browser Controls</h3>
+                <ul class="feature-list">
+                    <li>Developer tools blocked</li>
+                    <li>New tab creation prevented</li>
+                    <li>Navigation restrictions enforced</li>
+                    <li>Unauthorized sites blocked</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>Activity Monitoring</h3>
+                <ul class="feature-list">
+                    <li>Focus change detection</li>
+                    <li>Tab switching monitoring</li>
+                    <li>Security violation logging</li>
+                    <li>Session duration tracking</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h3>Educator Benefits</h3>
+                <ul class="feature-list">
+                    <li>Comprehensive activity logs</li>
+                    <li>Real-time security alerts</li>
+                    <li>Exportable assessment data</li>
+                    <li>Compliance reporting</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editor;
+        let softLockActive = false;
+
+        // Initialize CKEditor
+        ClassicEditor
+            .create(document.querySelector('#editor'), {
+                toolbar: [
+                    'heading', '|',
+                    'bold', 'italic', 'link', '|',
+                    'bulletedList', 'numberedList', '|',
+                    'outdent', 'indent', '|',
+                    'blockQuote', 'insertTable', '|',
+                    'undo', 'redo'
+                ]
+            })
+            .then(editorInstance => {
+                editor = editorInstance;
+            })
+            .catch(error => {
+                console.error('Editor initialization failed:', error);
+            });
+
+        // Extension ID detection and management
+        async function getExtensionId() {
+            // Check saved ID first
+            const savedId = localStorage.getItem('fredaExtensionId');
+            if (savedId && await testExtensionId(savedId)) {
+                return savedId;
+            }
+
+            // Try chrome.management API
+            try {
+                if (typeof chrome !== 'undefined' && chrome.management) {
+                    const extensions = await new Promise((resolve, reject) => {
+                        chrome.management.getAll((result) => {
+                            if (chrome.runtime.lastError) {
+                                reject(chrome.runtime.lastError);
+                            } else {
+                                resolve(result);
+                            }
+                        });
+                    });
+
+                    for (const ext of extensions) {
+                        if ((ext.name.includes('Freda') || ext.name.includes('Soft Lock')) && ext.enabled) {
+                            if (await testExtensionId(ext.id)) {
+                                localStorage.setItem('fredaExtensionId', ext.id);
+                                return ext.id;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                // Continue to fallback methods
+            }
+
+            return null;
+        }
+
+        async function testExtensionId(id) {
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Timeout')), 1000);
+                    chrome.runtime.sendMessage(id, { type: 'PING' }, (response) => {
+                        clearTimeout(timeout);
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                return result && result.success;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Main activation function
+        async function activateSoftLock() {
+            try {
+                let extensionId = await getExtensionId();
+                
+                if (!extensionId) {
+                    extensionId = localStorage.getItem('fredaExtensionId');
+                }
+
+                if (!extensionId) {
+                    handleExtensionNotFound();
+                    return;
+                }
+
+                // Try direct communication
+                chrome.runtime.sendMessage(
+                    extensionId,
+                    { type: 'ACTIVATE_SOFT_LOCK', triggerUrl: window.location.href },
+                    (response) => {
+                        if (chrome.runtime.lastError || !response || !response.success) {
+                            // Try content script fallback
+                            tryContentScriptActivation();
+                        } else {
+                            onActivationSuccess();
+                        }
+                    }
+                );
+            } catch (error) {
+                tryContentScriptActivation();
+            }
+        }
+
+        function tryContentScriptActivation() {
+            if (window.fredaSoftLockExtension && window.fredaSoftLockExtension.activateSoftLock) {
+                window.fredaSoftLockExtension.activateSoftLock(window.location.href)
+                    .then(() => onActivationSuccess())
+                    .catch(() => handleActivationFailure());
+            } else {
+                handleActivationFailure();
+            }
+        }
+
+        async function deactivateSoftLock() {
+            if (!confirm('Are you sure you want to disable security mode? This action will be logged.')) {
+                return;
+            }
+
+            try {
+                const extensionId = await getExtensionId() || localStorage.getItem('fredaExtensionId');
+                
+                if (extensionId) {
+                    chrome.runtime.sendMessage(
+                        extensionId,
+                        { type: 'DEACTIVATE_SOFT_LOCK' },
+                        (response) => {
+                            if (chrome.runtime.lastError || !response || !response.success) {
+                                tryContentScriptDeactivation();
+                            } else {
+                                onDeactivationSuccess();
+                            }
+                        }
+                    );
+                } else {
+                    tryContentScriptDeactivation();
+                }
+            } catch (error) {
+                tryContentScriptDeactivation();
+            }
+        }
+
+        function tryContentScriptDeactivation() {
+            if (window.fredaSoftLockExtension && window.fredaSoftLockExtension.deactivateSoftLock) {
+                window.fredaSoftLockExtension.deactivateSoftLock()
+                    .then(() => onDeactivationSuccess())
+                    .catch(() => handleDeactivationFailure());
+            } else {
+                handleDeactivationFailure();
+            }
+        }
+
+        // Success/failure handlers
+        function onActivationSuccess() {
+            softLockActive = true;
+            updateControls();
+            updateStatusIndicator();
+            showNotification('Security mode enabled successfully', 'success');
+        }
+
+        function onDeactivationSuccess() {
+            softLockActive = false;
+            updateControls();
+            updateStatusIndicator();
+            showNotification('Security mode disabled', 'info');
+        }
+
+        function handleActivationFailure() {
+            showNotification('Failed to enable security mode. Please check extension installation.', 'error');
+        }
+
+        function handleDeactivationFailure() {
+            showNotification('Failed to disable security mode. Please refresh the page.', 'error');
+        }
+
+        function handleExtensionNotFound() {
+            const extensionId = prompt(`Extension auto-detection failed. Please enter your extension ID:
+
+1. Go to chrome://extensions/
+2. Find "Freda Soft Lock Plus"
+3. Copy the extension ID
+4. Paste it below:`);
+            
+            if (extensionId && extensionId.length === 32) {
+                localStorage.setItem('fredaExtensionId', extensionId);
+                showNotification('Extension ID saved. Please try again.', 'info');
+            } else {
+                showNotification('Please install the Freda Soft Lock Plus extension first.', 'error');
+            }
+        }
+
+        // UI update functions
+        function updateControls() {
+            const activateBtn = document.getElementById('activateBtn');
+            const deactivateBtn = document.getElementById('deactivateBtn');
+            
+            activateBtn.disabled = softLockActive;
+            deactivateBtn.disabled = !softLockActive;
+        }
+
+        function updateStatusIndicator() {
+            const indicator = document.getElementById('statusIndicator');
+            
+            if (softLockActive) {
+                indicator.textContent = '🔒 Assessment Security Active';
+                indicator.className = 'status-indicator status-active';
+            } else {
+                indicator.textContent = '🔓 Assessment Security Inactive';
+                indicator.className = 'status-indicator status-inactive';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 1001;
+                max-width: 300px;
+                font-size: 14px;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Try auto-detection silently
+            await getExtensionId();
+            
+            // Listen for extension events
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'FREDA_SOFT_LOCK_ACTIVATED') {
+                    softLockActive = true;
+                    updateControls();
+                    updateStatusIndicator();
+                } else if (event.data.type === 'FREDA_SOFT_LOCK_DEACTIVATED') {
+                    softLockActive = false;
+                    updateControls();
+                    updateStatusIndicator();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
