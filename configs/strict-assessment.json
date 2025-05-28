@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "name": "Strict Assessment Configuration",
+  "description": "High-security mode for standardized testing and high-stakes assessments with minimal extension access",
+  "extensionControl": {
+    "mode": "allowlist",
+    "allowedExtensions": [
+      "nkeimhogjdpnpccoofpliimaahmaaome",
+      "coobgpohoikkiipiblmjeljniedjpjpf",
+      "apdfllckaahabafndbhieahigkjlhalf",
+      "blpcfgokakmgnkcojhhkbfbldkacnbeo",
+      "aohghmighlieiainnegkcijnfilokake",
+      "ghbmnnjooekpmoecnnnilnnbdlolhkhi",
+      "aapocclcgogkmnckokdopfmhonfmgoek",
+      "felcaaldnbdncclmgdcncolpebgiejap"
+    ],
+    "blockedExtensions": [
+      "kbfnbcaeplbcioakkpcpgfkobkghlhen",
+      "gighmmpiobklfepjocnamgkkbiglidom",
+      "fmkadmapgofadopljbjfkapdkoienihi",
+      "bhlhnicpbhignbdhedgjhgdocnmhomnp",
+      "hdokiejnpimakedhajhdlcegeplioahd",
+      "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+      "mmeijimgabbpbgpdklnllpncmdofkcpn",
+      "nlipoenfbbikpbjkfpfillcgkoblgpmj"
+    ],
+    "accessibilityExtensions": [],
+    "categories": {
+      "productivity": ["block"],
+      "accessibility": ["conditional"],
+      "entertainment": ["block"],
+      "social": ["block"],
+      "games": ["block"],
+      "developer": ["block"]
+    }
+  },
+  "assessmentSettings": {
+    "allowNewTabs": false,
+    "allowExtensionPages": false,
+    "allowDeveloperTools": false,
+    "strictMode": true,
+    "securityLevel": "maximum",
+    "monitoringFeatures": {
+      "keystrokeLogging": true,
+      "screenshotCapture": true,
+      "focusTracking": true,
+      "activityLogging": true
+    }
+  },
+  "restrictions": {
+    "copyPaste": "blocked",
+    "rightClick": "blocked",
+    "textSelection": "blocked",
+    "printScreen": "blocked",
+    "fileDownload": "blocked",
+    "urlNavigation": "blocked"
+  },
+  "metadata": {
+    "createdDate": "2024-01-15T00:00:00Z",
+    "lastModified": "2024-01-15T00:00:00Z",
+    "author": "Freda Security Team",
+    "targetAudience": "Standardized testing, certification exams, high-stakes assessments",
+    "testingEnvironment": "Secure testing centers, proctored environments",
+    "securityCompliance": ["FERPA", "SOC 2", "ISO 27001"]
+  }
+} 

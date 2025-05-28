@@ -1,0 +1,96 @@
+{
+  "version": "1.0.0",
+  "name": "Accessibility Assessment Configuration",
+  "description": "Assessment mode optimized for students with accessibility needs, including text-to-speech and reading assistance tools",
+  "extensionControl": {
+    "mode": "allowlist",
+    "allowedExtensions": [
+      "nkeimhogjdpnpccoofpliimaahmaaome",
+      "coobgpohoikkiipiblmjeljniedjpjpf",
+      "apdfllckaahabafndbhieahigkjlhalf",
+      "blpcfgokakmgnkcojhhkbfbldkacnbeo",
+      "aohghmighlieiainnegkcijnfilokake",
+      "ghbmnnjooekpmoecnnnilnnbdlolhkhi",
+      "aapocclcgogkmnckokdopfmhonfmgoek",
+      "felcaaldnbdncclmgdcncolpebgiejap",
+      "kohfgcgbkjodfcfkcackpagifgbcmimk",
+      "icoloanbecehinobmflpeglknkplbfbm",
+      "jlmpjdjjbgclbocgajdjefcidcncaied",
+      "kimpkiocicogmepnmbjckplebgffcpba",
+      "ncjmfjffaalmghmiekhlcjdgmlhiklnm",
+      "iopcbpdjglgphfmedjipbgjojdkgfpem",
+      "lfheijjkpjkpjhpfdoioaggijkblbnnl",
+      "abejaofhnlkiojkjnablkcbcnakhcjjm",
+      "ehfpabfgakhngnakaigodojphkkgofha",
+      "klbibkeccnjlkjkiokjodocebajanakg"
+    ],
+    "blockedExtensions": [],
+    "accessibilityExtensions": [
+      "kohfgcgbkjodfcfkcackpagifgbcmimk",
+      "icoloanbecehinobmflpeglknkplbfbm",
+      "jlmpjdjjbgclbocgajdjefcidcncaied",
+      "kimpkiocicogmepnmbjckplebgffcpba",
+      "ncjmfjffaalmghmiekhlcjdgmlhiklnm",
+      "iopcbpdjglgphfmedjipbgjojdkgfpem",
+      "lfheijjkpjkpjhpfdoioaggijkblbnnl",
+      "abejaofhnlkiojkjnablkcbcnakhcjjm",
+      "ehfpabfgakhngnakaigodojphkkgofha",
+      "klbibkeccnjlkjkiokjodocebajanakg"
+    ],
+    "categories": {
+      "productivity": ["allow"],
+      "accessibility": ["allow"],
+      "entertainment": ["block"],
+      "social": ["block"],
+      "games": ["block"],
+      "developer": ["block"]
+    },
+    "extensionDetails": {
+      "kohfgcgbkjodfcfkcackpagifgbcmimk": {
+        "name": "NaturalReader AI Text to Speech",
+        "purpose": "Text-to-speech reading assistance",
+        "category": "accessibility",
+        "allowedFeatures": ["text-reading", "voice-selection", "speed-control"]
+      },
+      "kimpkiocicogmepnmbjckplebgffcpba": {
+        "name": "Read&Write for Google Chrome",
+        "purpose": "Reading and writing support tools",
+        "category": "accessibility",
+        "allowedFeatures": ["text-reading", "word-prediction", "vocabulary-support"]
+      },
+      "iopcbpdjglgphfmedjipbgjojdkgfpem": {
+        "name": "Grammarly",
+        "purpose": "Writing assistance and grammar checking",
+        "category": "accessibility",
+        "allowedFeatures": ["grammar-check", "spelling-check", "writing-suggestions"]
+      }
+    }
+  },
+  "assessmentSettings": {
+    "allowNewTabs": false,
+    "allowExtensionPages": false,
+    "allowDeveloperTools": false,
+    "strictMode": false,
+    "accessibilityFeatures": {
+      "allowTextToSpeech": true,
+      "allowVoiceCommands": true,
+      "allowScreenReader": true,
+      "allowMagnification": true,
+      "allowHighContrast": true
+    }
+  },
+  "specialAccommodations": {
+    "extendedTime": true,
+    "audioInstructions": true,
+    "screenReaderCompatible": true,
+    "keyboardNavigation": true
+  },
+  "metadata": {
+    "createdDate": "2024-01-15T00:00:00Z",
+    "lastModified": "2024-01-15T00:00:00Z",
+    "author": "Freda Accessibility Team",
+    "targetAudience": "Students with accessibility needs (IEP/504 plans)",
+    "testingEnvironment": "Accessible Chromebook deployment",
+    "complianceStandards": ["ADA", "Section 508", "WCAG 2.1 AA"]
+  }
+} 

@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "name": "Default Assessment Configuration",
+  "description": "Standard assessment mode with basic extension restrictions for general testing environments",
+  "extensionControl": {
+    "mode": "allowlist",
+    "allowedExtensions": [
+      "nkeimhogjdpnpccoofpliimaahmaaome",
+      "coobgpohoikkiipiblmjeljniedjpjpf",
+      "apdfllckaahabafndbhieahigkjlhalf",
+      "blpcfgokakmgnkcojhhkbfbldkacnbeo",
+      "aohghmighlieiainnegkcijnfilokake",
+      "ghbmnnjooekpmoecnnnilnnbdlolhkhi",
+      "aapocclcgogkmnckokdopfmhonfmgoek",
+      "felcaaldnbdncclmgdcncolpebgiejap"
+    ],
+    "blockedExtensions": [],
+    "accessibilityExtensions": [
+      "kohfgcgbkjodfcfkcackpagifgbcmimk",
+      "icoloanbecehinobmflpeglknkplbfbm",
+      "jlmpjdjjbgclbocgajdjefcidcncaied",
+      "kimpkiocicogmepnmbjckplebgffcpba"
+    ],
+    "categories": {
+      "productivity": ["allow"],
+      "accessibility": ["allow"],
+      "entertainment": ["block"],
+      "social": ["block"],
+      "games": ["block"],
+      "developer": ["block"]
+    }
+  },
+  "assessmentSettings": {
+    "allowNewTabs": false,
+    "allowExtensionPages": false,
+    "allowDeveloperTools": false,
+    "strictMode": true
+  },
+  "metadata": {
+    "createdDate": "2024-01-15T00:00:00Z",
+    "lastModified": "2024-01-15T00:00:00Z",
+    "author": "Freda Assessment Team",
+    "targetAudience": "General K-12 and Higher Education",
+    "testingEnvironment": "Standard Chromebook deployment"
+  }
+} 

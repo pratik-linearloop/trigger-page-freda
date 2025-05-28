@@ -234,6 +234,25 @@
         <h2>Assessment Security Control</h2>
         <p>Activate security mode to enable content protection, restrict navigation, and monitor assessment activity.</p>
         
+        <div class="form-group">
+            <label class="form-label">Assessment Configuration:</label>
+            <select class="form-control" id="configSelect" onchange="handleConfigChange()">
+                <option value="default">Default Assessment (Standard restrictions)</option>
+                <option value="accessibility">Accessibility Assessment (includes NaturalReader AI)</option>
+                <option value="strict">Strict Assessment (High security)</option>
+                <option value="custom">Custom Configuration (from URL)</option>
+            </select>
+        </div>
+
+        <div id="customConfigUrl" class="form-group" style="display: none;">
+            <label class="form-label">Configuration URL:</label>
+            <input type="url" id="configUrlInput" class="form-control" 
+                   placeholder="https://example.com/my-config.json">
+            <small style="color: #6c757d; font-size: 0.875em; margin-top: 5px; display: block;">
+                Enter the URL to your custom configuration JSON file
+            </small>
+        </div>
+        
         <button class="control-btn" id="activateBtn" onclick="activateSoftLock()">
             🔒 Enable Security Mode
         </button>
@@ -426,13 +445,59 @@
             }
         }
 
-        // Enhanced activation function with better external domain support
+        // Configuration URLs
+        const CONFIG_URLS = {
+            default: './configs/default-assessment.json',
+            accessibility: './configs/accessibility-assessment.json',
+            strict: './configs/strict-assessment.json'
+        };
+
+        // Handle configuration selection
+        function handleConfigChange() {
+            const configSelect = document.getElementById('configSelect');
+            const customUrlDiv = document.getElementById('customConfigUrl');
+            
+            if (configSelect.value === 'custom') {
+                customUrlDiv.style.display = 'block';
+            } else {
+                customUrlDiv.style.display = 'none';
+            }
+        }
+
+        // Get configuration URL based on selection
+        function getConfigurationUrl() {
+            const configSelect = document.getElementById('configSelect');
+            const customUrlInput = document.getElementById('configUrlInput');
+            
+            if (configSelect.value === 'custom') {
+                const customUrl = customUrlInput.value.trim();
+                if (!customUrl) {
+                    throw new Error('Please enter a valid configuration URL');
+                }
+                return customUrl;
+            } else if (CONFIG_URLS[configSelect.value]) {
+                return new URL(CONFIG_URLS[configSelect.value], window.location.href).href;
+            }
+            
+            return null; // Use default configuration
+        }
+
+        // Enhanced activation function with configuration support
         async function activateSoftLock() {
             try {
+                // Get configuration URL
+                let configurationUrl = null;
+                try {
+                    configurationUrl = getConfigurationUrl();
+                } catch (error) {
+                    showNotification(error.message, 'error');
+                    return;
+                }
+
                 // For external domains (GitHub Pages), rely primarily on content script
                 if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
                     // Try content script first for external domains
-                    tryContentScriptActivation();
+                    tryContentScriptActivation(configurationUrl);
                     return; // Don't show modal immediately, let content script handle it
                 }
 
@@ -448,14 +513,18 @@
                     return;
                 }
 
-                // Try direct communication
+                // Try direct communication with configuration
                 chrome.runtime.sendMessage(
                     extensionId,
-                    { type: 'ACTIVATE_SOFT_LOCK', triggerUrl: window.location.href },
+                    { 
+                        type: 'ACTIVATE_SOFT_LOCK', 
+                        triggerUrl: window.location.href,
+                        configurationUrl: configurationUrl
+                    },
                     (response) => {
                         if (chrome.runtime.lastError || !response || !response.success) {
                             // Try content script fallback
-                            tryContentScriptActivation();
+                            tryContentScriptActivation(configurationUrl);
                         } else {
                             onActivationSuccess();
                         }
@@ -463,14 +532,14 @@
                 );
             } catch (error) {
                 console.warn('Activation error:', error);
-                tryContentScriptActivation();
+                tryContentScriptActivation(configurationUrl);
             }
         }
 
-        function tryContentScriptActivation() {
+        function tryContentScriptActivation(configurationUrl) {
             // First try the window object method
             if (window.fredaSoftLockExtension && window.fredaSoftLockExtension.activateSoftLock) {
-                window.fredaSoftLockExtension.activateSoftLock(window.location.href)
+                window.fredaSoftLockExtension.activateSoftLock(window.location.href, configurationUrl)
                     .then(() => onActivationSuccess())
                     .catch(() => handleActivationFailure());
                 return true;
@@ -480,7 +549,8 @@
             window.postMessage({
                 type: 'FREDA_ACTIVATE_REQUEST',
                 source: 'trigger-page',
-                url: window.location.href
+                url: window.location.href,
+                configurationUrl: configurationUrl
             }, '*');
 
             // Set a timeout to check if activation worked or show extension guide
