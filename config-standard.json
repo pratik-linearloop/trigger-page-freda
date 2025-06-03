@@ -1,0 +1,32 @@
+{
+  "name": "Standard Assessment Configuration",
+  "version": "1.0.0",
+  "description": "Default secure assessment configuration with basic extension control",
+  "extensionControl": {
+    "mode": "allowlist",
+    "allowedExtensions": [
+      "nkeimhogjdpnpccoofpliimaahmaaome",
+      "coobgpohoikkiipiblmjeljniedjpjpf", 
+      "apdfllckaahabafndbhieahigkjlhalf",
+      "blpcfgokakmgnkcojhhkbfbldkacnbeo",
+      "aohghmighlieiainnegkcijnfilokake",
+      "ghbmnnjooekpmoecnnnilnnbdlolhkhi",
+      "aapocclcgogkmnckokdopfmhonfmgoek",
+      "felcaaldnbdncclmgdcncolpebgiejap"
+    ]
+  },
+  "assessmentSettings": {
+    "allowNewTabs": false,
+    "allowExtensionPages": false,
+    "allowDeveloperTools": false,
+    "strictMode": true,
+    "focusEnforcement": true
+  },
+  "blockedExtensions": [
+    {
+      "id": "kohfgcgbkjodfcfkcackpagifgbcmimk",
+      "name": "NaturalReader - AI Text to Speech",
+      "reason": "AI assistance tools are not permitted during assessments"
+    }
+  ]
+} 

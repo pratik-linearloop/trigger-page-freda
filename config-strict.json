@@ -1,0 +1,37 @@
+{
+  "name": "Strict Assessment Configuration",
+  "version": "1.0.0", 
+  "description": "High-security assessment configuration with enhanced extension blocking",
+  "extensionControl": {
+    "mode": "allowlist",
+    "allowedExtensions": [
+      "nkeimhogjdpnpccoofpliimaahmaaome",
+      "apdfllckaahabafndbhieahigkjlhalf",
+      "aohghmighlieiainnegkcijnfilokake"
+    ]
+  },
+  "assessmentSettings": {
+    "allowNewTabs": false,
+    "allowExtensionPages": false,
+    "allowDeveloperTools": false,
+    "strictMode": true,
+    "focusEnforcement": true
+  },
+  "blockedExtensions": [
+    {
+      "id": "kohfgcgbkjodfcfkcackpagifgbcmimk",
+      "name": "NaturalReader - AI Text to Speech",
+      "reason": "AI text-to-speech tools prohibited in strict mode"
+    },
+    {
+      "id": "blpcfgokakmgnkcojhhkbfbldkacnbeo",
+      "name": "YouTube",
+      "reason": "Media streaming blocked in strict assessment mode"
+    },
+    {
+      "id": "coobgpohoikkiipiblmjeljniedjpjpf",
+      "name": "Google Search by Voice",
+      "reason": "Voice search disabled in strict mode"
+    }
+  ]
+} 

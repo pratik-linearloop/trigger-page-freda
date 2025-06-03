@@ -301,7 +301,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
+    <div class="header">
             <h1>🛡️ Vretta Assessment Platform</h1>
             <p class="subtitle">Professional Secure Testing Environment</p>
             <p class="description">Enterprise-grade assessment security with comprehensive content protection</p>
@@ -311,15 +311,15 @@
             <div class="extension-status">
                 <div id="statusDot" class="status-dot"></div>
                 <span id="extensionMessage">Checking security extension...</span>
-            </div>
+        </div>
             <div class="security-controls">
                 <button id="activateBtn" class="btn btn-primary" onclick="activateSecurityMode()" disabled>
                     🔒 Activate Secure Mode
-                </button>
+        </button>
                 <button id="deactivateBtn" class="btn btn-secondary" onclick="deactivateSecurityMode()" disabled>
                     🔓 End Secure Session
-                </button>
-            </div>
+        </button>
+    </div>
         </div>
 
         <div class="assessment-area">
@@ -342,9 +342,9 @@
                 <div style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); padding: 15px; border-radius: 5px; margin-top: 15px;">
                     <strong>⚠️ Important:</strong> Do not attempt to leave this browser window or switch applications during the assessment. These actions will be detected and logged as security violations.
                 </div>
-            </div>
+        </div>
 
-            <div class="form-group">
+        <div class="form-group">
                 <label class="form-label" for="studentName">👤 Student Name (Optional)</label>
                 <input type="text" id="studentName" class="form-control" 
                        placeholder="Enter your full name (optional)"
@@ -358,6 +358,18 @@
                        placeholder="Enter your student ID (optional)"
                        autocomplete="off"
                        spellcheck="false">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="configSelection">⚙️ Assessment Configuration</label>
+                <select id="configSelection" class="form-control">
+                    <option value="config-standard.json">Standard Configuration (Default)</option>
+                    <option value="config-strict.json">Strict Mode (Enhanced Security)</option>
+                    <option value="config-ai-allowed.json">AI-Assisted (Accessibility)</option>
+                </select>
+                <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
+                    Select the security configuration appropriate for your assessment type
+                </div>
             </div>
 
             <div class="form-group">
@@ -388,15 +400,15 @@
 
         // Business-ready CKEditor configuration
         function initializeCKEditor() {
-            ClassicEditor
+        ClassicEditor
                 .create(document.querySelector('#richTextEditor'), {
-                    toolbar: [
-                        'heading', '|',
+                toolbar: [
+                    'heading', '|',
                         'bold', 'italic', 'underline', '|',
-                        'bulletedList', 'numberedList', '|',
-                        'outdent', 'indent', '|',
-                        'blockQuote', 'insertTable', '|',
-                        'undo', 'redo'
+                    'bulletedList', 'numberedList', '|',
+                    'outdent', 'indent', '|',
+                    'blockQuote', 'insertTable', '|',
+                    'undo', 'redo'
                     ],
                     heading: {
                         options: [
@@ -487,7 +499,7 @@
             studentId.addEventListener('blur', function() {
                 if (this.value.trim().length < 3) {
                     this.style.borderColor = '#e74c3c';
-                } else {
+            } else {
                     this.style.borderColor = '#27ae60';
                 }
             });
@@ -538,9 +550,15 @@
                 return;
             }
 
+            // Get configuration file path
+            const configFile = document.getElementById('configSelection').value;
+            const configUrl = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '') + configFile;
+
             // Show fullscreen consent dialog
             const consentMessage = `
 SECURE ASSESSMENT MODE CONSENT
+
+Configuration: ${configFile.replace('.json', '').replace('config-', '').toUpperCase()}
 
 By proceeding, you agree to the following security measures:
 
@@ -549,6 +567,7 @@ By proceeding, you agree to the following security measures:
 ✓ All focus violations will be recorded
 ✓ Security violations may result in assessment termination
 ✓ All activity will be monitored for academic integrity
+✓ Browser extensions will be managed according to selected configuration
 
 Do you consent to these security measures and wish to begin the secure assessment?
             `;
@@ -565,7 +584,7 @@ Do you consent to these security measures and wish to begin the secure assessmen
 
                 // Use extension bridge if available
                 if (window.vrettaSoftLockExtension && window.vrettaSoftLockExtension.activateSoftLock) {
-                    await window.vrettaSoftLockExtension.activateSoftLock(window.location.href);
+                    await window.vrettaSoftLockExtension.activateSoftLock(window.location.href, configUrl);
                     handleActivationSuccess();
                     return;
                 }
@@ -574,6 +593,7 @@ Do you consent to these security measures and wish to begin the secure assessmen
                 window.postMessage({
                     type: 'VRETTA_ACTIVATE_REQUEST',
                     url: window.location.href,
+                    configUrl: configUrl,
                     studentData: { name: studentName, id: studentId }
                 }, '*');
 
@@ -637,7 +657,7 @@ Do you consent to these security measures and wish to begin the secure assessmen
             const securityIndicator = document.getElementById('securityIndicator');
             const activateBtn = document.getElementById('activateBtn');
             const deactivateBtn = document.getElementById('deactivateBtn');
-
+            
             if (securityActive) {
                 securityIndicator.className = 'security-indicator security-active';
                 securityIndicator.textContent = '🔒 Secure Mode Active';
@@ -655,44 +675,44 @@ Do you consent to these security measures and wish to begin the secure assessmen
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.className = `notification ${type} show`;
-
+            
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 4000);
         }
 
         // Listen for extension messages
-        window.addEventListener('message', function(event) {
-            if (event.source !== window) return;
+            window.addEventListener('message', function(event) {
+                if (event.source !== window) return;
 
             switch (event.data.type) {
                 case 'VRETTA_EXTENSION_READY':
                     handleExtensionDetected();
-                    break;
-                    
+                        break;
+                        
                 case 'VRETTA_SOFT_LOCK_ACTIVATED':
                     handleActivationSuccess();
-                    break;
-                    
+                        break;
+                        
                 case 'VRETTA_SOFT_LOCK_DEACTIVATED':
                     handleDeactivationSuccess();
-                    break;
-                    
+                        break;
+                        
                 case 'VRETTA_ACTIVATION_FAILED':
                     showNotification('Security activation failed. Please try again.', 'error');
-                    break;
-                    
+                        break;
+                        
                 case 'VRETTA_DEACTIVATION_FAILED':
                     showNotification('Security deactivation failed. Please contact support.', 'error');
-                    break;
-            }
-        });
+                        break;
+                }
+            });
 
         // Initial extension detection ping
-        window.postMessage({
+                    window.postMessage({
             type: 'VRETTA_PING_REQUEST',
             timestamp: Date.now()
-        }, '*');
+                    }, '*');
 
         // Prevent common security bypasses
         document.addEventListener('keydown', function(e) {

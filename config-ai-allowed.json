@@ -1,0 +1,34 @@
+{
+  "name": "AI-Assisted Assessment Configuration",
+  "version": "1.0.0",
+  "description": "Accessibility-friendly configuration allowing AI text-to-speech tools",
+  "extensionControl": {
+    "mode": "allowlist", 
+    "allowedExtensions": [
+      "nkeimhogjdpnpccoofpliimaahmaaome",
+      "coobgpohoikkiipiblmjeljniedjpjpf",
+      "apdfllckaahabafndbhieahigkjlhalf", 
+      "blpcfgokakmgnkcojhhkbfbldkacnbeo",
+      "aohghmighlieiainnegkcijnfilokake",
+      "ghbmnnjooekpmoecnnnilnnbdlolhkhi",
+      "aapocclcgogkmnckokdopfmhonfmgoek",
+      "felcaaldnbdncclmgdcncolpebgiejap",
+      "kohfgcgbkjodfcfkcackpagifgbcmimk"
+    ]
+  },
+  "assessmentSettings": {
+    "allowNewTabs": false,
+    "allowExtensionPages": false,
+    "allowDeveloperTools": false,
+    "strictMode": false,
+    "focusEnforcement": true
+  },
+  "allowedExtensions": [
+    {
+      "id": "kohfgcgbkjodfcfkcackpagifgbcmimk",
+      "name": "NaturalReader - AI Text to Speech", 
+      "reason": "Permitted for accessibility and learning support"
+    }
+  ],
+  "notes": "This configuration allows AI text-to-speech tools for students with accessibility needs or learning difficulties"
+} 
