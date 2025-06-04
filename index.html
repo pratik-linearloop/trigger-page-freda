@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vretta Assessment Platform - Secure Testing Environment</title>
+    <title>Vretta Soft Lock - Secure Testing Environment</title>
     
     <!-- CKEditor 5 CDN -->
     <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
@@ -297,14 +297,90 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
+
+        /* Violations Log Styles */
+        .violations-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .violation-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-left: 4px solid #e74c3c;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .violation-icon {
+            font-size: 18px;
+            margin-right: 10px;
+            width: 25px;
+            text-align: center;
+        }
+
+        .violation-content {
+            flex: 1;
+        }
+
+        .violation-message {
+            font-weight: 600;
+            color: #e74c3c;
+            margin-bottom: 2px;
+        }
+
+        .violation-timestamp {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .no-violations {
+            text-align: center;
+            color: #28a745;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        /* Copy-Paste Button Styles */
+        .editor-controls {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .copy-paste-btn {
+            padding: 8px 16px;
+            border: 1px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-paste-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .copy-paste-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
     <div class="container">
     <div class="header">
-            <h1>🛡️ Vretta Assessment Platform</h1>
-            <p class="subtitle">Professional Secure Testing Environment</p>
-            <p class="description">Enterprise-grade assessment security with comprehensive content protection</p>
+            <h1>Vretta Soft Lock</h1>
         </div>
 
         <div class="status-bar">
@@ -368,7 +444,7 @@
                     <option value="config-ai-allowed.json">AI-Assisted (Accessibility)</option>
                 </select>
                 <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
-                    Select the security configuration appropriate for your assessment type
+                    Choose the appropriate security level for your assessment environment. Standard mode provides basic security features, Strict mode offers enhanced protection with additional monitoring, and AI-Assisted mode allows certain accessibility features while maintaining assessment integrity.
                 </div>
             </div>
 
@@ -382,8 +458,54 @@
 
             <div class="form-group">
                 <label class="form-label" for="richTextEditor">✏️ Rich Text Editor</label>
+                <div class="editor-controls">
+                    <button type="button" class="copy-paste-btn" onclick="copyEditorContent()">
+                        📋 Copy Content
+                    </button>
+                    <button type="button" class="copy-paste-btn" onclick="pasteToEditor()">
+                        📄 Paste Content
+                    </button>
+                    <button type="button" class="copy-paste-btn" onclick="clearEditor()">
+                        🗑️ Clear Editor
+                    </button>
+                </div>
                 <div id="richTextEditor"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Violations Log Section -->
+    <div class="assessment-area">
+        <h2 class="section-title">⚠️ Security Violations Log</h2>
+        <div id="violationsLog" class="violations-container">
+            <div class="no-violations">
+                <p>🔒 No security violations detected</p>
+            </div>
+        </div>
+        <button id="clearLogBtn" class="btn btn-secondary" onclick="clearViolationsLog()" style="margin-top: 15px;">
+            🗑️ Clear Log
+        </button>
+    </div>
+
+    <!-- Test Section -->
+    <div class="assessment-area">
+        <h2 class="section-title">🧪 Security Test Functions</h2>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-secondary" onclick="testVirtualCopy()">
+                📋 Test Virtual Copy
+            </button>
+            <button class="btn btn-secondary" onclick="testVirtualPaste()">
+                📄 Test Virtual Paste
+            </button>
+            <button class="btn btn-secondary" onclick="testFocusViolation()">
+                👁️ Test Focus Violation
+            </button>
+            <button class="btn btn-secondary" onclick="testContextMenu()">
+                📝 Test Context Menu
+            </button>
+        </div>
+        <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 14px; color: #6c757d;">
+            <strong>Note:</strong> These test functions simulate security violations to demonstrate the logging system. Use them to verify that the violation detection and API integration are working correctly.
         </div>
     </div>
 
@@ -397,6 +519,229 @@
         let securityActive = false;
         let vrettaExtensionDetected = false;
         let richTextEditor = null;
+        let violationsData = [];
+
+        // Violations API and Logging Functions
+        function logViolation(type, message, details = {}) {
+            const violation = {
+                id: Date.now(),
+                type: type,
+                message: message,
+                timestamp: new Date(),
+                details: details,
+                icon: getViolationIcon(type)
+            };
+            
+            violationsData.push(violation);
+            displayViolation(violation);
+            
+            // Send to API endpoint if available
+            sendViolationToAPI(violation);
+            
+            console.warn('Security Violation:', violation);
+        }
+
+        function getViolationIcon(type) {
+            const iconMap = {
+                'focus': '👁️',
+                'copy': '📋',
+                'paste': '📄',
+                'navigate': '🔄',
+                'tab': '🔗',
+                'devtools': '🔧',
+                'virtual-copy': '🖱️',
+                'context-menu': '📝',
+                'shortcut': '⌨️',
+                'window': '🪟',
+                'general': '⚠️'
+            };
+            return iconMap[type] || '⚠️';
+        }
+
+        function displayViolation(violation) {
+            const logContainer = document.getElementById('violationsLog');
+            const noViolationsMsg = logContainer.querySelector('.no-violations');
+            
+            if (noViolationsMsg) {
+                noViolationsMsg.style.display = 'none';
+            }
+            
+            const violationElement = document.createElement('div');
+            violationElement.className = 'violation-item';
+            violationElement.innerHTML = `
+                <div class="violation-icon">${violation.icon}</div>
+                <div class="violation-content">
+                    <div class="violation-message">${violation.message}</div>
+                    <div class="violation-timestamp">${violation.timestamp.toLocaleString()}</div>
+                </div>
+            `;
+            
+            logContainer.appendChild(violationElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        async function sendViolationToAPI(violation) {
+            try {
+                const response = await fetch('/api/violations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...violation,
+                        sessionId: getSessionId(),
+                        studentId: document.getElementById('studentId').value || 'anonymous',
+                        url: window.location.href
+                    })
+                });
+                
+                if (!response.ok) {
+                    console.warn('Failed to send violation to API:', response.statusText);
+                }
+            } catch (error) {
+                console.warn('API endpoint not available:', error.message);
+            }
+        }
+
+        function getSessionId() {
+            if (!sessionStorage.getItem('vrettaSessionId')) {
+                sessionStorage.setItem('vrettaSessionId', 'vretta_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
+            }
+            return sessionStorage.getItem('vrettaSessionId');
+        }
+
+        function clearViolationsLog() {
+            if (confirm('Are you sure you want to clear the violations log?')) {
+                violationsData = [];
+                const logContainer = document.getElementById('violationsLog');
+                logContainer.innerHTML = '<div class="no-violations"><p>🔒 No security violations detected</p></div>';
+            }
+        }
+
+        // Copy-Paste Functions for Rich Text Editor
+        async function copyEditorContent() {
+            if (!richTextEditor) {
+                showNotification('Rich text editor not initialized', 'error');
+                return;
+            }
+            
+            try {
+                const content = richTextEditor.getData();
+                await navigator.clipboard.writeText(content);
+                showNotification('Content copied to clipboard', 'success');
+                logViolation('copy', 'Content copied from rich text editor', { contentLength: content.length });
+            } catch (error) {
+                showNotification('Failed to copy content', 'error');
+                console.error('Copy error:', error);
+            }
+        }
+
+        async function pasteToEditor() {
+            if (!richTextEditor) {
+                showNotification('Rich text editor not initialized', 'error');
+                return;
+            }
+            
+            try {
+                const text = await navigator.clipboard.readText();
+                richTextEditor.setData(text);
+                showNotification('Content pasted to editor', 'success');
+                logViolation('paste', 'Content pasted to rich text editor', { contentLength: text.length });
+            } catch (error) {
+                showNotification('Failed to paste content - clipboard access denied', 'error');
+                console.error('Paste error:', error);
+            }
+        }
+
+        function clearEditor() {
+            if (!richTextEditor) {
+                showNotification('Rich text editor not initialized', 'error');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear the editor content?')) {
+                richTextEditor.setData('');
+                showNotification('Editor content cleared', 'success');
+            }
+        }
+
+        // Virtual Copy-Paste Prevention
+        function preventVirtualCopyPaste() {
+            // Prevent virtual clipboard access
+            document.addEventListener('copy', function(e) {
+                if (securityActive) {
+                    logViolation('virtual-copy', 'Attempted virtual copy operation detected');
+                    e.preventDefault();
+                    showNotification('Copy operation blocked in secure mode', 'warning');
+                }
+            });
+
+            document.addEventListener('cut', function(e) {
+                if (securityActive) {
+                    logViolation('virtual-copy', 'Attempted virtual cut operation detected');
+                    e.preventDefault();
+                    showNotification('Cut operation blocked in secure mode', 'warning');
+                }
+            });
+
+            document.addEventListener('paste', function(e) {
+                if (securityActive) {
+                    // Allow paste only in designated input fields
+                    const allowedElements = ['INPUT', 'TEXTAREA'];
+                    const isAllowedElement = allowedElements.includes(e.target.tagName);
+                    const isRichEditor = e.target.closest('.ck-editor');
+                    
+                    if (!isAllowedElement && !isRichEditor) {
+                        logViolation('virtual-copy', 'Attempted virtual paste operation in restricted area');
+                        e.preventDefault();
+                        showNotification('Paste operation blocked in secure mode', 'warning');
+                    }
+                }
+            });
+
+            // Monitor for keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (securityActive && (e.ctrlKey || e.metaKey)) {
+                    const blockedKeys = ['c', 'v', 'x', 'a'];
+                    if (blockedKeys.includes(e.key.toLowerCase())) {
+                        const isInputField = ['INPUT', 'TEXTAREA'].includes(e.target.tagName);
+                        const isRichEditor = e.target.closest('.ck-editor');
+                        
+                        if (!isInputField && !isRichEditor) {
+                            logViolation('shortcut', `Blocked keyboard shortcut: Ctrl+${e.key.toUpperCase()}`);
+                            e.preventDefault();
+                            showNotification(`Keyboard shortcut Ctrl+${e.key.toUpperCase()} blocked in secure mode`, 'warning');
+                        }
+                    }
+                }
+            });
+
+            // Monitor focus changes (window switching detection)
+            let windowFocused = true;
+            window.addEventListener('focus', function() {
+                if (!windowFocused && securityActive) {
+                    logViolation('focus', 'User returned to assessment window');
+                }
+                windowFocused = true;
+            });
+
+            window.addEventListener('blur', function() {
+                if (securityActive) {
+                    logViolation('focus', 'User switched away from assessment window');
+                    showNotification('⚠️ Focus violation detected - returning to assessment', 'warning');
+                }
+                windowFocused = false;
+            });
+
+            // Monitor right-click attempts
+            document.addEventListener('contextmenu', function(e) {
+                if (securityActive) {
+                    logViolation('context-menu', 'Right-click context menu attempt blocked');
+                    e.preventDefault();
+                    showNotification('Context menu disabled in secure mode', 'warning');
+                }
+            });
+        }
 
         // Business-ready CKEditor configuration
         function initializeCKEditor() {
@@ -478,6 +823,7 @@
             detectExtension();
             initializeCKEditor();
             disableChromeHelpMeWrite();
+            preventVirtualCopyPaste();
             
             // Set up professional form validation
             setupFormValidation();
@@ -724,6 +1070,27 @@ Do you consent to these security measures and wish to begin the secure assessmen
                 }
             }
         });
+
+        // Test Functions for Security Violations
+        function testVirtualCopy() {
+            logViolation('virtual-copy', 'Test: Virtual copy operation simulated');
+            showNotification('Virtual copy test violation logged', 'warning');
+        }
+
+        function testVirtualPaste() {
+            logViolation('virtual-copy', 'Test: Virtual paste operation simulated');
+            showNotification('Virtual paste test violation logged', 'warning');
+        }
+
+        function testFocusViolation() {
+            logViolation('focus', 'Test: Focus violation simulated');
+            showNotification('Focus test violation logged', 'warning');
+        }
+
+        function testContextMenu() {
+            logViolation('context-menu', 'Test: Context menu violation simulated');
+            showNotification('Context menu test violation logged', 'warning');
+        }
     </script>
 </body>
 </html> 

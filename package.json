@@ -1,0 +1,26 @@
+{
+  "name": "vretta-violations-api",
+  "version": "1.0.0",
+  "description": "API server for capturing and managing Vretta assessment violations",
+  "main": "api-server-example.js",
+  "scripts": {
+    "start": "node api-server-example.js",
+    "dev": "nodemon api-server-example.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "vretta",
+    "assessment",
+    "security",
+    "violations",
+    "api"
+  ],
+  "author": "Vretta",
+  "license": "MIT"
+} 
