@@ -459,15 +459,18 @@
             <div class="form-group">
                 <label class="form-label" for="richTextEditor">✏️ Rich Text Editor</label>
                 <div class="editor-controls">
-                    <button type="button" class="copy-paste-btn" onclick="copyEditorContent()">
+                    <button type="button" id="copyEditorBtn" class="copy-paste-btn" onclick="copyEditorContent()">
                         📋 Copy Content
                     </button>
-                    <button type="button" class="copy-paste-btn" onclick="pasteToEditor()">
+                    <button type="button" id="pasteEditorBtn" class="copy-paste-btn" onclick="pasteToEditor()">
                         📄 Paste Content
                     </button>
                     <button type="button" class="copy-paste-btn" onclick="clearEditor()">
                         🗑️ Clear Editor
                     </button>
+                    <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
+                        <strong>Note:</strong> Copy/Paste buttons will be disabled during secure assessment mode for academic integrity.
+                    </div>
                 </div>
                 <div id="richTextEditor"></div>
             </div>
@@ -721,7 +724,7 @@
             });
         }
 
-        // Business-ready CKEditor configuration
+        // Business-ready CKEditor configuration with secure copy/paste control
         function initializeCKEditor() {
             ClassicEditor
                 .create(document.querySelector('#richTextEditor'), {
@@ -742,9 +745,14 @@
                         ]
                     },
                     placeholder: 'Type your detailed assessment response here. Rich formatting is available for professional presentation.',
-                    // Disable Chrome Help Me Write
+                    // Disable Chrome Help Me Write and clipboard plugins in secure mode
                     extraPlugins: [],
-                    removePlugins: ['SmartSuggestions', 'WritingAssistance']
+                    removePlugins: ['SmartSuggestions', 'WritingAssistance'],
+                    // Configure clipboard behavior for security
+                    clipboard: {
+                        // Allow normal clipboard operations when not in secure mode
+                        // Will be controlled programmatically during security activation
+                    }
                 })
                 .then(editor => {
                     richTextEditor = editor;
@@ -756,12 +764,105 @@
                         writer.setAttribute('data-writing-suggestions', 'false', editable);
                     });
                     
+                    // Set up secure copy/paste monitoring for CKEditor
+                    setupCKEditorSecurity(editor);
+                    
                     console.log('Professional CKEditor initialized successfully');
                 })
                 .catch(error => {
                     console.error('Error initializing CKEditor:', error);
                     showNotification('Rich text editor failed to load', 'error');
                 });
+        }
+
+        // Configure CKEditor security and copy/paste prevention
+        function setupCKEditorSecurity(editor) {
+            // Store original clipboard commands for restoration
+            const originalCopy = editor.commands.get('copy');
+            const originalCut = editor.commands.get('cut');
+            const originalPaste = editor.commands.get('paste');
+            
+            // Monitor CKEditor clipboard events
+            editor.editing.view.document.on('clipboardInput', (evt, data) => {
+                if (securityActive) {
+                    evt.stop();
+                    logViolation('paste', 'Attempted paste operation in CKEditor during secure mode', {
+                        dataType: data.dataTransfer.getData('text/plain') ? 'text' : 'mixed',
+                        source: 'ckeditor'
+                    });
+                    showNotification('Paste operation blocked in secure CKEditor', 'warning');
+                }
+            }, { priority: 'highest' });
+
+            editor.editing.view.document.on('copy', (evt, data) => {
+                if (securityActive) {
+                    evt.stop();
+                    logViolation('copy', 'Attempted copy operation in CKEditor during secure mode', {
+                        source: 'ckeditor'
+                    });
+                    showNotification('Copy operation blocked in secure CKEditor', 'warning');
+                }
+            }, { priority: 'highest' });
+
+            editor.editing.view.document.on('cut', (evt, data) => {
+                if (securityActive) {
+                    evt.stop();
+                    logViolation('copy', 'Attempted cut operation in CKEditor during secure mode', {
+                        source: 'ckeditor'
+                    });
+                    showNotification('Cut operation blocked in secure CKEditor', 'warning');
+                }
+            }, { priority: 'highest' });
+            
+            // Monitor keyboard shortcuts in CKEditor
+            editor.keystrokes.set('Ctrl+C', (evt, cancel) => {
+                if (securityActive) {
+                    cancel();
+                    logViolation('shortcut', 'Blocked Ctrl+C in CKEditor during secure mode');
+                    showNotification('Copy shortcut blocked in secure mode', 'warning');
+                }
+            });
+            
+            editor.keystrokes.set('Ctrl+V', (evt, cancel) => {
+                if (securityActive) {
+                    cancel();
+                    logViolation('shortcut', 'Blocked Ctrl+V in CKEditor during secure mode');
+                    showNotification('Paste shortcut blocked in secure mode', 'warning');
+                }
+            });
+            
+            editor.keystrokes.set('Ctrl+X', (evt, cancel) => {
+                if (securityActive) {
+                    cancel();
+                    logViolation('shortcut', 'Blocked Ctrl+X in CKEditor during secure mode');
+                    showNotification('Cut shortcut blocked in secure mode', 'warning');
+                }
+            });
+            
+            editor.keystrokes.set('Ctrl+A', (evt, cancel) => {
+                if (securityActive) {
+                    cancel();
+                    logViolation('shortcut', 'Blocked Ctrl+A in CKEditor during secure mode');
+                    showNotification('Select All blocked in secure mode', 'warning');
+                }
+            });
+
+            // Disable right-click context menu in CKEditor during secure mode
+            editor.editing.view.document.on('contextmenu', (evt) => {
+                if (securityActive) {
+                    evt.preventDefault();
+                    logViolation('context-menu', 'Right-click context menu blocked in CKEditor');
+                    showNotification('Context menu disabled in secure CKEditor', 'warning');
+                }
+            });
+            
+            // Store references for security mode toggling
+            window.ckEditorSecurityRefs = {
+                editor: editor,
+                originalCopy: originalCopy,
+                originalCut: originalCut,
+                originalPaste: originalPaste
+            };
         }
 
         // Disable Chrome Help Me Write feature
@@ -954,23 +1055,7 @@ Do you consent to these security measures and wish to begin the secure assessmen
             }
         }
 
-        function handleActivationSuccess() {
-            securityActive = true;
-            updateSecurityUI();
-            showNotification('🔒 Secure assessment mode activated successfully!', 'success');
-            
-            // Make form elements more secure
-            document.body.classList.add('secured');
-        }
 
-        function handleDeactivationSuccess() {
-            securityActive = false;
-            updateSecurityUI();
-            showNotification('🔓 Secure assessment session ended', 'warning');
-            
-            // Remove security styling
-            document.body.classList.remove('secured');
-        }
 
         function updateSecurityUI() {
             const securityIndicator = document.getElementById('securityIndicator');
@@ -1032,6 +1117,163 @@ Do you consent to these security measures and wish to begin the secure assessmen
             type: 'VRETTA_PING_REQUEST',
             timestamp: Date.now()
         }, '*');
+
+        // CKEditor Copy/Paste Functions with Security Controls
+        function copyEditorContent() {
+            if (securityActive) {
+                logViolation('copy', 'Attempted to use copy button during secure mode', {
+                    source: 'copy-button',
+                    editor: 'ckeditor'
+                });
+                showNotification('Copy function disabled during secure assessment', 'warning');
+                return;
+            }
+
+            if (!richTextEditor) {
+                showNotification('Rich text editor not available', 'error');
+                return;
+            }
+
+            try {
+                const content = richTextEditor.getData();
+                if (!content.trim()) {
+                    showNotification('No content to copy', 'warning');
+                    return;
+                }
+
+                // Use modern clipboard API if available
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    const textContent = richTextEditor.editing.view.document.getRoot().getChild(0).data || content.replace(/<[^>]*>/g, '');
+                    navigator.clipboard.writeText(textContent).then(() => {
+                        showNotification('Content copied to clipboard', 'success');
+                    }).catch(err => {
+                        console.error('Clipboard API failed:', err);
+                        fallbackCopy(content);
+                    });
+                } else {
+                    fallbackCopy(content);
+                }
+            } catch (error) {
+                console.error('Copy operation failed:', error);
+                showNotification('Failed to copy content', 'error');
+            }
+        }
+
+        function pasteToEditor() {
+            if (securityActive) {
+                logViolation('paste', 'Attempted to use paste button during secure mode', {
+                    source: 'paste-button',
+                    editor: 'ckeditor'
+                });
+                showNotification('Paste function disabled during secure assessment', 'warning');
+                return;
+            }
+
+            if (!richTextEditor) {
+                showNotification('Rich text editor not available', 'error');
+                return;
+            }
+
+            try {
+                // Use modern clipboard API if available
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    navigator.clipboard.readText().then(text => {
+                        if (text.trim()) {
+                            richTextEditor.setData(richTextEditor.getData() + '<p>' + text + '</p>');
+                            showNotification('Content pasted successfully', 'success');
+                        } else {
+                            showNotification('No content in clipboard', 'warning');
+                        }
+                    }).catch(err => {
+                        console.error('Clipboard read failed:', err);
+                        showNotification('Failed to read clipboard. Try Ctrl+V instead.', 'warning');
+                    });
+                } else {
+                    showNotification('Paste via button not supported. Use Ctrl+V instead.', 'warning');
+                }
+            } catch (error) {
+                console.error('Paste operation failed:', error);
+                showNotification('Failed to paste content', 'error');
+            }
+        }
+
+        function clearEditor() {
+            if (!richTextEditor) {
+                showNotification('Rich text editor not available', 'error');
+                return;
+            }
+
+            if (confirm('Are you sure you want to clear all content in the rich text editor?')) {
+                richTextEditor.setData('');
+                showNotification('Editor content cleared', 'success');
+                
+                if (securityActive) {
+                    logViolation('general', 'Editor content cleared during secure mode', {
+                        source: 'clear-button',
+                        editor: 'ckeditor'
+                    });
+                }
+            }
+        }
+
+        function fallbackCopy(content) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = content.replace(/<[^>]*>/g, '');
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showNotification('Content copied to clipboard', 'success');
+            } catch (err) {
+                showNotification('Failed to copy content', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Update security UI for copy/paste buttons
+        function updateCopyPasteButtonsState() {
+            const copyBtn = document.getElementById('copyEditorBtn');
+            const pasteBtn = document.getElementById('pasteEditorBtn');
+            
+            if (copyBtn && pasteBtn) {
+                copyBtn.disabled = securityActive;
+                pasteBtn.disabled = securityActive;
+                
+                if (securityActive) {
+                    copyBtn.style.opacity = '0.5';
+                    pasteBtn.style.opacity = '0.5';
+                    copyBtn.title = 'Copy disabled during secure assessment';
+                    pasteBtn.title = 'Paste disabled during secure assessment';
+                } else {
+                    copyBtn.style.opacity = '1';
+                    pasteBtn.style.opacity = '1';
+                    copyBtn.title = 'Copy editor content to clipboard';
+                    pasteBtn.title = 'Paste content from clipboard to editor';
+                }
+            }
+        }
+
+        // Enhanced security mode activation handler
+        function handleActivationSuccess() {
+            securityActive = true;
+            updateSecurityUI();
+            updateCopyPasteButtonsState();
+            showNotification('🔒 Secure assessment mode activated successfully!', 'success');
+            
+            // Make form elements more secure
+            document.body.classList.add('secured');
+        }
+
+        function handleDeactivationSuccess() {
+            securityActive = false;
+            updateSecurityUI();
+            updateCopyPasteButtonsState();
+            showNotification('🔓 Secure assessment session ended', 'warning');
+            
+            // Remove security styling
+            document.body.classList.remove('secured');
+        }
 
         // Prevent common security bypasses
         document.addEventListener('keydown', function(e) {
