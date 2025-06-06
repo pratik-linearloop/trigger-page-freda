@@ -348,32 +348,78 @@
             padding: 20px;
         }
 
-        /* Copy-Paste Button Styles */
+        /* Enhanced Copy-Paste Button Styles */
         .editor-controls {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
         .copy-paste-btn {
-            padding: 8px 16px;
-            border: 1px solid #667eea;
+            padding: 10px 16px;
+            border: 2px solid #667eea;
             background: white;
             color: #667eea;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-width: 120px;
+            text-align: center;
         }
 
-        .copy-paste-btn:hover {
+        .copy-paste-btn:hover:not(:disabled) {
             background: #667eea;
             color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .copy-paste-btn:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
         }
 
         .copy-paste-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
+            background: #f8f9fa;
+            color: #6c757d;
+            border-color: #dee2e6;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .copy-paste-btn.success {
+            background: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .copy-paste-btn.error {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+
+        .copy-paste-btn .btn-icon {
+            margin-right: 6px;
+            font-size: 16px;
+        }
+
+        .editor-controls-note {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
         }
     </style>
 </head>
@@ -459,18 +505,26 @@
             <div class="form-group">
                 <label class="form-label" for="richTextEditor">✏️ Rich Text Editor</label>
                 <div class="editor-controls">
-                    <button type="button" id="copyEditorBtn" class="copy-paste-btn" onclick="copyEditorContent()">
-                        📋 Copy Content
+                    <button type="button" id="copyEditorBtn" class="copy-paste-btn" onclick="copyEditorContent()" 
+                            title="Copy editor content to clipboard">
+                        <span class="btn-icon">📋</span>Copy Content
                     </button>
-                    <button type="button" id="pasteEditorBtn" class="copy-paste-btn" onclick="pasteToEditor()">
-                        📄 Paste Content
+                    <button type="button" id="pasteEditorBtn" class="copy-paste-btn" onclick="pasteToEditor()"
+                            title="Paste content from clipboard to editor">
+                        <span class="btn-icon">📄</span>Paste Content
                     </button>
-                    <button type="button" class="copy-paste-btn" onclick="clearEditor()">
-                        🗑️ Clear Editor
+                    <button type="button" id="clearEditorBtn" class="copy-paste-btn" onclick="clearEditor()"
+                            title="Clear all content in the editor">
+                        <span class="btn-icon">🗑️</span>Clear Editor
                     </button>
-                    <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
-                        <strong>Note:</strong> Copy/Paste buttons will be disabled during secure assessment mode for academic integrity.
-                    </div>
+                    <button type="button" id="selectAllBtn" class="copy-paste-btn" onclick="selectAllEditor()"
+                            title="Select all content in the editor">
+                        <span class="btn-icon">📝</span>Select All
+                    </button>
+                </div>
+                <div class="editor-controls-note">
+                    <strong>📌 Note:</strong> Copy/Paste buttons will be disabled during secure assessment mode for academic integrity. 
+                    Use keyboard shortcuts (Ctrl+C, Ctrl+V) within the editor when not in secure mode.
                 </div>
                 <div id="richTextEditor"></div>
             </div>
@@ -599,38 +653,135 @@
             }
         }
 
-        // Copy-Paste Functions for Rich Text Editor
+        // Enhanced Copy-Paste Functions for Rich Text Editor
         async function copyEditorContent() {
-            if (!richTextEditor) {
-                showNotification('Rich text editor not initialized', 'error');
+            // Security check first
+            if (securityActive) {
+                logViolation('copy', 'Attempted to use copy button during secure mode', {
+                    source: 'copy-button',
+                    editor: 'ckeditor'
+                });
+                showNotification('Copy function disabled during secure assessment', 'warning');
                 return;
             }
-            
+
+            if (!richTextEditor) {
+                showNotification('Rich text editor not available', 'error');
+                return;
+            }
+
             try {
                 const content = richTextEditor.getData();
-                await navigator.clipboard.writeText(content);
-                showNotification('Content copied to clipboard', 'success');
-                logViolation('copy', 'Content copied from rich text editor', { contentLength: content.length });
+                if (!content.trim()) {
+                    showNotification('No content to copy', 'warning');
+                    return;
+                }
+
+                // Try modern clipboard API first
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    // Get both HTML and plain text content
+                    const textContent = richTextEditor.editing.view.document.getRoot().getChild(0)?.data || 
+                                      content.replace(/<[^>]*>/g, '').trim();
+                    
+                    await navigator.clipboard.writeText(textContent);
+                    showNotification('Content copied to clipboard', 'success');
+                    
+                    // Visual feedback
+                    const copyBtn = document.getElementById('copyEditorBtn');
+                    if (copyBtn) {
+                        copyBtn.classList.add('success');
+                        setTimeout(() => copyBtn.classList.remove('success'), 2000);
+                    }
+                    
+                    logViolation('copy', 'Content copied from rich text editor', { 
+                        contentLength: content.length,
+                        textLength: textContent.length 
+                    });
+                } else {
+                    // Fallback for older browsers
+                    fallbackCopy(content);
+                }
             } catch (error) {
+                console.error('Copy operation failed:', error);
                 showNotification('Failed to copy content', 'error');
-                console.error('Copy error:', error);
+                
+                // Visual feedback for error
+                const copyBtn = document.getElementById('copyEditorBtn');
+                if (copyBtn) {
+                    copyBtn.classList.add('error');
+                    setTimeout(() => copyBtn.classList.remove('error'), 2000);
+                }
+                
+                // Try fallback method
+                try {
+                    const content = richTextEditor.getData();
+                    fallbackCopy(content);
+                } catch (fallbackError) {
+                    console.error('Fallback copy also failed:', fallbackError);
+                }
             }
         }
 
         async function pasteToEditor() {
-            if (!richTextEditor) {
-                showNotification('Rich text editor not initialized', 'error');
+            // Security check first
+            if (securityActive) {
+                logViolation('paste', 'Attempted to use paste button during secure mode', {
+                    source: 'paste-button',
+                    editor: 'ckeditor'
+                });
+                showNotification('Paste function disabled during secure assessment', 'warning');
                 return;
             }
-            
+
+            if (!richTextEditor) {
+                showNotification('Rich text editor not available', 'error');
+                return;
+            }
+
             try {
-                const text = await navigator.clipboard.readText();
-                richTextEditor.setData(text);
-                showNotification('Content pasted to editor', 'success');
-                logViolation('paste', 'Content pasted to rich text editor', { contentLength: text.length });
+                // Try modern clipboard API first
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    if (text.trim()) {
+                        // Insert content at cursor position instead of replacing all content
+                        const currentContent = richTextEditor.getData();
+                        const newContent = currentContent + '<p>' + text.replace(/\n/g, '</p><p>') + '</p>';
+                        richTextEditor.setData(newContent);
+                        showNotification('Content pasted successfully', 'success');
+                        
+                        // Visual feedback
+                        const pasteBtn = document.getElementById('pasteEditorBtn');
+                        if (pasteBtn) {
+                            pasteBtn.classList.add('success');
+                            setTimeout(() => pasteBtn.classList.remove('success'), 2000);
+                        }
+                        
+                        logViolation('paste', 'Content pasted to rich text editor', { 
+                            contentLength: text.length 
+                        });
+                    } else {
+                        showNotification('No content in clipboard', 'warning');
+                    }
+                } else {
+                    // Show instructions for manual paste
+                    showNotification('Paste via button not supported in this browser. Use Ctrl+V inside the editor.', 'warning');
+                }
             } catch (error) {
-                showNotification('Failed to paste content - clipboard access denied', 'error');
-                console.error('Paste error:', error);
+                console.error('Paste operation failed:', error);
+                
+                // Visual feedback for error
+                const pasteBtn = document.getElementById('pasteEditorBtn');
+                if (pasteBtn) {
+                    pasteBtn.classList.add('error');
+                    setTimeout(() => pasteBtn.classList.remove('error'), 2000);
+                }
+                
+                // Different error messages based on the error type
+                if (error.name === 'NotAllowedError') {
+                    showNotification('Clipboard access denied. Please allow clipboard permissions or use Ctrl+V.', 'warning');
+                } else {
+                    showNotification('Failed to paste content. Try using Ctrl+V inside the editor.', 'error');
+                }
             }
         }
 
@@ -766,6 +917,9 @@
                     
                     // Set up secure copy/paste monitoring for CKEditor
                     setupCKEditorSecurity(editor);
+                    
+                    // Add keyboard shortcut hints to buttons
+                    addKeyboardShortcutHints();
                     
                     console.log('Professional CKEditor initialized successfully');
                 })
@@ -1118,84 +1272,7 @@ Do you consent to these security measures and wish to begin the secure assessmen
             timestamp: Date.now()
         }, '*');
 
-        // CKEditor Copy/Paste Functions with Security Controls
-        function copyEditorContent() {
-            if (securityActive) {
-                logViolation('copy', 'Attempted to use copy button during secure mode', {
-                    source: 'copy-button',
-                    editor: 'ckeditor'
-                });
-                showNotification('Copy function disabled during secure assessment', 'warning');
-                return;
-            }
 
-            if (!richTextEditor) {
-                showNotification('Rich text editor not available', 'error');
-                return;
-            }
-
-            try {
-                const content = richTextEditor.getData();
-                if (!content.trim()) {
-                    showNotification('No content to copy', 'warning');
-                    return;
-                }
-
-                // Use modern clipboard API if available
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    const textContent = richTextEditor.editing.view.document.getRoot().getChild(0).data || content.replace(/<[^>]*>/g, '');
-                    navigator.clipboard.writeText(textContent).then(() => {
-                        showNotification('Content copied to clipboard', 'success');
-                    }).catch(err => {
-                        console.error('Clipboard API failed:', err);
-                        fallbackCopy(content);
-                    });
-                } else {
-                    fallbackCopy(content);
-                }
-            } catch (error) {
-                console.error('Copy operation failed:', error);
-                showNotification('Failed to copy content', 'error');
-            }
-        }
-
-        function pasteToEditor() {
-            if (securityActive) {
-                logViolation('paste', 'Attempted to use paste button during secure mode', {
-                    source: 'paste-button',
-                    editor: 'ckeditor'
-                });
-                showNotification('Paste function disabled during secure assessment', 'warning');
-                return;
-            }
-
-            if (!richTextEditor) {
-                showNotification('Rich text editor not available', 'error');
-                return;
-            }
-
-            try {
-                // Use modern clipboard API if available
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    navigator.clipboard.readText().then(text => {
-                        if (text.trim()) {
-                            richTextEditor.setData(richTextEditor.getData() + '<p>' + text + '</p>');
-                            showNotification('Content pasted successfully', 'success');
-                        } else {
-                            showNotification('No content in clipboard', 'warning');
-                        }
-                    }).catch(err => {
-                        console.error('Clipboard read failed:', err);
-                        showNotification('Failed to read clipboard. Try Ctrl+V instead.', 'warning');
-                    });
-                } else {
-                    showNotification('Paste via button not supported. Use Ctrl+V instead.', 'warning');
-                }
-            } catch (error) {
-                console.error('Paste operation failed:', error);
-                showNotification('Failed to paste content', 'error');
-            }
-        }
 
         function clearEditor() {
             if (!richTextEditor) {
@@ -1207,12 +1284,54 @@ Do you consent to these security measures and wish to begin the secure assessmen
                 richTextEditor.setData('');
                 showNotification('Editor content cleared', 'success');
                 
+                // Visual feedback
+                const clearBtn = document.getElementById('clearEditorBtn');
+                if (clearBtn) {
+                    clearBtn.classList.add('success');
+                    setTimeout(() => clearBtn.classList.remove('success'), 2000);
+                }
+                
                 if (securityActive) {
                     logViolation('general', 'Editor content cleared during secure mode', {
                         source: 'clear-button',
                         editor: 'ckeditor'
                     });
                 }
+            }
+        }
+
+        function selectAllEditor() {
+            if (!richTextEditor) {
+                showNotification('Rich text editor not available', 'error');
+                return;
+            }
+
+            try {
+                // Select all content in CKEditor
+                const editorElement = richTextEditor.editing.view.document.getRoot();
+                richTextEditor.editing.view.change(writer => {
+                    const range = writer.createRangeIn(editorElement);
+                    writer.setSelection(range);
+                });
+                
+                showNotification('All content selected', 'success');
+                
+                // Visual feedback
+                const selectBtn = document.getElementById('selectAllBtn');
+                if (selectBtn) {
+                    selectBtn.classList.add('success');
+                    setTimeout(() => selectBtn.classList.remove('success'), 1500);
+                }
+                
+                if (securityActive) {
+                    logViolation('general', 'Select all used during secure mode', {
+                        source: 'select-all-button',
+                        editor: 'ckeditor'
+                    });
+                }
+            } catch (error) {
+                console.error('Select all operation failed:', error);
+                showNotification('Failed to select content', 'error');
             }
         }
 
@@ -1235,21 +1354,38 @@ Do you consent to these security measures and wish to begin the secure assessmen
         function updateCopyPasteButtonsState() {
             const copyBtn = document.getElementById('copyEditorBtn');
             const pasteBtn = document.getElementById('pasteEditorBtn');
+            const clearBtn = document.getElementById('clearEditorBtn');
+            const selectBtn = document.getElementById('selectAllBtn');
             
-            if (copyBtn && pasteBtn) {
-                copyBtn.disabled = securityActive;
-                pasteBtn.disabled = securityActive;
-                
+            const buttons = [copyBtn, pasteBtn, clearBtn, selectBtn].filter(btn => btn);
+            
+            buttons.forEach(btn => {
+                if (btn) {
+                    btn.disabled = securityActive;
+                    
+                    if (securityActive) {
+                        btn.title = btn.title.replace(/^[^-]*/, btn.textContent.trim() + ' - Disabled during secure assessment');
+                    } else {
+                        // Restore original titles
+                        if (btn.id === 'copyEditorBtn') btn.title = 'Copy editor content to clipboard';
+                        if (btn.id === 'pasteEditorBtn') btn.title = 'Paste content from clipboard to editor';
+                        if (btn.id === 'clearEditorBtn') btn.title = 'Clear all content in the editor';
+                        if (btn.id === 'selectAllBtn') btn.title = 'Select all content in the editor';
+                    }
+                }
+            });
+            
+            // Update the note text based on security state
+            const noteElement = document.querySelector('.editor-controls-note');
+            if (noteElement) {
                 if (securityActive) {
-                    copyBtn.style.opacity = '0.5';
-                    pasteBtn.style.opacity = '0.5';
-                    copyBtn.title = 'Copy disabled during secure assessment';
-                    pasteBtn.title = 'Paste disabled during secure assessment';
+                    noteElement.innerHTML = '<strong>🔒 Security Active:</strong> All copy/paste operations are disabled during secure assessment mode for academic integrity.';
+                    noteElement.style.background = 'rgba(220, 53, 69, 0.1)';
+                    noteElement.style.borderLeftColor = '#dc3545';
                 } else {
-                    copyBtn.style.opacity = '1';
-                    pasteBtn.style.opacity = '1';
-                    copyBtn.title = 'Copy editor content to clipboard';
-                    pasteBtn.title = 'Paste content from clipboard to editor';
+                    noteElement.innerHTML = '<strong>📌 Note:</strong> Copy/Paste buttons will be disabled during secure assessment mode for academic integrity. Use keyboard shortcuts (Ctrl+C, Ctrl+V) within the editor when not in secure mode.';
+                    noteElement.style.background = 'rgba(102, 126, 234, 0.05)';
+                    noteElement.style.borderLeftColor = '#667eea';
                 }
             }
         }
@@ -1275,8 +1411,28 @@ Do you consent to these security measures and wish to begin the secure assessmen
             document.body.classList.remove('secured');
         }
 
-        // Prevent common security bypasses
+        // Enhanced keyboard shortcut handling
         document.addEventListener('keydown', function(e) {
+            // Handle editor-specific shortcuts when editor is focused
+            const isEditorFocused = document.activeElement && 
+                                  (document.activeElement.closest('.ck-editor') || 
+                                   document.activeElement.classList.contains('ck-content'));
+            
+            if (!securityActive && isEditorFocused && (e.ctrlKey || e.metaKey)) {
+                switch(e.key.toLowerCase()) {
+                    case 'a':
+                        // Allow Ctrl+A in editor but also trigger our select all function
+                        setTimeout(() => {
+                            const selectBtn = document.getElementById('selectAllBtn');
+                            if (selectBtn) {
+                                selectBtn.classList.add('success');
+                                setTimeout(() => selectBtn.classList.remove('success'), 1000);
+                            }
+                        }, 100);
+                        break;
+                }
+            }
+            
             if (securityActive) {
                 // Block common development shortcuts during secure mode
                 if ((e.ctrlKey || e.metaKey) && ['i', 'j', 'u', 'p'].includes(e.key.toLowerCase())) {
@@ -1285,6 +1441,23 @@ Do you consent to these security measures and wish to begin the secure assessmen
                 }
             }
         });
+
+        // Add keyboard shortcut hints
+        function addKeyboardShortcutHints() {
+            const buttons = [
+                { id: 'copyEditorBtn', shortcut: 'Ctrl+C (in editor)' },
+                { id: 'pasteEditorBtn', shortcut: 'Ctrl+V (in editor)' },
+                { id: 'selectAllBtn', shortcut: 'Ctrl+A (in editor)' }
+            ];
+            
+            buttons.forEach(({ id, shortcut }) => {
+                const btn = document.getElementById(id);
+                if (btn && !securityActive) {
+                    const originalTitle = btn.title;
+                    btn.title = `${originalTitle} | ${shortcut}`;
+                }
+            });
+        }
     </script>
 </body>
 </html> 
